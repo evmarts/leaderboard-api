@@ -1,0 +1,33 @@
+{
+  "name": "leaderboard-api",
+  "version": "1.0.0",
+  "description": "API for leaderboard for Instagram supporter contests",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evmarts/leaderboard-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/evmarts/leaderboard-api/issues"
+  },
+  "homepage": "https://github.com/evmarts/leaderboard-api#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "create-react-app": "^1.5.2",
+    "express": "^4.16.3",
+    "fs": "0.0.1-security",
+    "knex": "^0.15.2",
+    "nodemon": "^1.18.3",
+    "pdfkit": "^0.8.3",
+    "pg": "^7.4.3",
+    "react-columns": "^1.2.0",
+    "react-router-dom": "^4.3.1"
+  }
+}
