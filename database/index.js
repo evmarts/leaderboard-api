@@ -5,7 +5,7 @@ const options = process.env.NODE_ENV === "production" ? {
     client: 'pg',
     connection: {
         host: 'localhost',
-        database: 'jobs'
+        database: 'acc1'
     }
 };
 const knex = require("knex")(options);
