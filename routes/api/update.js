@@ -9,7 +9,6 @@ const Promise = require("bluebird");
 router.use(cors());
 
 router.get("/", async (req, res) => {
-    res.send('hey');
   leaderboard({
     acc1: {
       username: req.query.username,
