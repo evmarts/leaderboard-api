@@ -10,13 +10,13 @@ router.use(cors());
 
 router.get("/", async (req, res) => {
     res.send('hey');
-//   leaderboard({
-//     acc1: {
-//       username: req.query.username,
-//       password: req.query.password,
-//       target: req.query.target
-//     }
-//   });
+  leaderboard({
+    acc1: {
+      username: req.query.username,
+      password: req.query.password,
+      target: req.query.target
+    }
+  });
 });
 
 leaderboard = async USER_CREDS => {
