@@ -7,8 +7,8 @@ router.use(cors());
 
 router.get("/", async (req, res) => {
   let r = await knex
-    .select("users_small.username", "users_small.points")
-    .from("users_small");
+    .select("username", "points", "likes", "users_tagged", "support_a_creator")
+    .from("leaderboard");
   res.send(r);
 });
 
