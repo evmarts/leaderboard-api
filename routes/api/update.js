@@ -9,32 +9,33 @@ const Promise = require("bluebird");
 router.use(cors());
 
 router.get("/", async (req, res) => {
-  leaderboard({
+  res.send(await leaderboard({
     acc1: {
       username: req.query.username,
       password: req.query.password,
       target: req.query.target
     }
-  });
+  }));
 });
 
 leaderboard = async USER_CREDS => {
   var device = new Client.Device(USER_CREDS.acc1.username);
   const session = await getSesh(USER_CREDS.acc1, device);
-
   const accountName = USER_CREDS.acc1.target;
   const accountID = await getUserIdFromUsername(session, accountName);
-  const recentMedias = await getRecentMedia(session, accountID);
-  const recentMediaIds = recentMedias.map(rm => rm.id);
+
+  // get all the medias of the account
+  const media = await getMedia(session, accountID);
+  const mediaIds = media.map(rm => rm.id);
+  console.log(mediaIds.length)
 
   let likersMap = {};
   let allComments = [];
-  for (mid of recentMediaIds) {
+  for (mid of mediaIds) {
     let likers = await getLikersOfMedia(session, mid);
     for (l of likers) {
       likersMap[l._params.username] = likersMap[l._params.username] + 1 || 1;
     }
-
     let comments = await getComments(session, mid);
     allComments = allComments.concat(comments);
   }
@@ -87,8 +88,8 @@ leaderboard = async USER_CREDS => {
     } where leaderboard.username = '${input.username}'`);
   }
 
-  console.log(
-    await knex.raw("UPDATE leaderboard SET points = likes + 2*users_tagged")
+  return await knex.raw(
+    "UPDATE leaderboard SET points = likes + 2*users_tagged"
   );
 };
 
@@ -136,10 +137,10 @@ const getSesh = async (acc, device) => {
   });
 };
 
-const getRecentMedia = async (session, userID) => {
+const getMedia = async (session, userID) => {
   return await new Promise((resolve, reject) => {
     let feed = new Client.Feed.UserMedia(session, userID);
-    feed.get().then(data => {
+    feed.all().then(data => {
       resolve(data);
     });
   });
