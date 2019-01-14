@@ -8,7 +8,8 @@ router.use(cors());
 router.get("/", async (req, res) => {
   let r = await knex
     .select("username", "points", "likes", "users_tagged", "support_a_creator")
-    .from("leaderboard").orderBy('points', 'desc');
+    .from("leaderboard").orderBy('points', 'desc')
+    console.log(r.length);
   res.send(r);
 });
 
