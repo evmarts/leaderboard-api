@@ -88,10 +88,10 @@ leaderboard = async USER_CREDS => {
     } where leaderboard.username = '${input.username}'`);
   }
 
-  await knex.raw("update leaderboard set points = points + 10 where username = 'whoops.alexs'")
+  await knex.raw("update leaderboard set support_a_creator = 1 where username = 'whoops.alexs'")
 
   return await knex.raw(
-    "UPDATE leaderboard SET points = likes + 2*users_tagged"
+    "UPDATE leaderboard SET points = likes + 2*users_tagged + 10*support_a_creator"
   );
 };
 
