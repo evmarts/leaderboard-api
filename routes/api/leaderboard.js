@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
   console.log("RECEIVED: GET leaderboard-api/api/leaderboard");
 
   let leaderboardRows = await knex
-    .select("username", "points", "likes", "users_tagged", "support_a_creator")
+    .select("username", "points", "likes", "users_tagged", "is_supporter")
     .from("leaderboard")
     .orderBy("points", "desc")
     .limit(100);
