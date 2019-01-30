@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express.Router();
-router.use(cors());
 var cors = require("cors");
+router.use(cors());
 const knex = require("../../database");
 var Client = require("instagram-private-api").V1;
 const {
@@ -9,7 +9,7 @@ const {
   getMedia,
   getLikersOfMedia,
   getUserIdFromUsername
-} = require("../../instagram-private-api/helpers.js");
+} = require("../../helpers/helpers.js");
 
 // TODOs
 // todo: should consider creating a endpoint that updates a 'likes' table and do a select to that table here
