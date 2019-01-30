@@ -1,12 +1,18 @@
 var express = require("express");
 var router = express.Router();
 var cors = require("cors");
+router.use(cors());
 const knex = require("../../database");
 var Client = require("instagram-private-api").V1;
-var storage = new Client.CookieFileStorage("./cookies/cookies.json");
-const Promise = require("bluebird");
-
-router.use(cors());
+const {
+  getSesh,
+  getMedia,
+  getLikersOfMedia,
+  getUserIdFromUsername,
+  extractUserNames,
+  getComments,
+  getFollowers
+} = require("../../helpers/helpers.js");
 
 // TODO this should be idempotent!
 router.put("/", async (req, res) => {
@@ -127,7 +133,7 @@ router.patch("/", async (req, res) => {
 
   var device = new Client.Device(USER_CREDS.acc1.username);
   const session = await getSesh(USER_CREDS.acc1, device);
-  
+
   const tagged = await knex("tagged")
     .select("*")
     .where("validated", false);
@@ -169,72 +175,5 @@ router.patch("/", async (req, res) => {
 
   res.send(updated);
 });
-
-async function getUserIdFromUsername(session, username) {
-  return Client.Account.searchForUser(session, username)
-    .then(account => {
-      return account.id;
-    })
-    .catch(err => console.error(err.message));
-}
-
-const getFollowers = async (session, accountID) => {
-  const feed = new Client.Feed.AccountFollowers(session, accountID);
-  feed.map = item => item.id;
-  return feed.all();
-};
-
-const getComments = async (session, mediaID) => {
-  let feed = new Client.Feed.MediaComments(session, mediaID);
-  let comments = await new Promise((resolve, reject) => {
-    resolve(feed.all());
-  });
-  let coms = [];
-  for (c of comments) {
-    coms.push(c);
-  }
-  return coms;
-};
-
-async function getUserIdFromUsername(session, username) {
-  return Client.Account.searchForUser(session, username)
-    .then(account => {
-      return account.id;
-    })
-    .catch(err => console.error(err.message));
-}
-
-const extractUserNames = string => {
-  const matches = [];
-  for (s of string.split(" ")) {
-    const re = /(?:@)([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/;
-    if (s.match(re)) {
-      matches.push(s.match(re)[1]);
-    }
-  }
-  return matches;
-};
-
-// gets the likers of a media
-const getLikersOfMedia = async (session, mediaID) => {
-  return await new Promise((resolve, reject) => {
-    resolve(Client.Media.likers(session, mediaID));
-  });
-};
-
-const getSesh = async (acc, device) => {
-  return await new Promise((resolve, reject) => {
-    resolve(Client.Session.create(device, storage, acc.username, acc.password));
-  });
-};
-
-const getMedia = async (session, userID) => {
-  return await new Promise((resolve, reject) => {
-    let feed = new Client.Feed.UserMedia(session, userID);
-    feed.all().then(data => {
-      resolve(data);
-    });
-  });
-};
 
 module.exports = router;

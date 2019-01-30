@@ -31,3 +31,32 @@ module.exports.getUserIdFromUsername = async (session, username) => {
     })
     .catch(err => console.error(err.message));
 };
+
+module.exports.extractUserNames = string => {
+  const matches = [];
+  for (s of string.split(" ")) {
+    const re = /(?:@)([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/;
+    if (s.match(re)) {
+      matches.push(s.match(re)[1]);
+    }
+  }
+  return matches;
+};
+
+module.exports.getComments = async (session, mediaID) => {
+  let feed = new Client.Feed.MediaComments(session, mediaID);
+  let comments = await new Promise((resolve, reject) => {
+    resolve(feed.all());
+  });
+  let coms = [];
+  for (c of comments) {
+    coms.push(c);
+  }
+  return coms;
+};
+
+module.exports.getFollowers = async (session, accountID) => {
+  const feed = new Client.Feed.AccountFollowers(session, accountID);
+  feed.map = item => item.id;
+  return feed.all();
+};
