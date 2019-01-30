@@ -14,10 +14,12 @@ const {
   getFollowers
 } = require("../../helpers/helpers.js");
 
-// TODO this should be idempotent!
+// gets all instances where a user has tagged another user from the comment
+// section of each post after the specified start date
 router.put("/", async (req, res) => {
-  console.log("got a PUT /api/comments request with body:", req.body);
+  console.log("RECEIVED: PUT leaderboard-api/api/comments");
 
+  // create instagram-private-api session
   const device = new Client.Device(req.body.user);
   const session = await getSesh(
     {
@@ -26,9 +28,6 @@ router.put("/", async (req, res) => {
     },
     device
   );
-  console.log("logged in to:", req.body.user);
-
-  console.log("scraping media from:", req.body.target);
   const accountName = req.body.target;
   const accountID = await getUserIdFromUsername(session, accountName);
 
@@ -37,7 +36,6 @@ router.put("/", async (req, res) => {
     .filter(m => m._params.takenAt > parseInt(req.body.startDate))
     .map(m => m.id);
 
-  console.log("considering:", mediaIds.length);
   // get the likers and comments of each media
   let likersCount = {};
   let allComments = [];
@@ -72,6 +70,7 @@ router.put("/", async (req, res) => {
     let commenter = commenterComment[0];
     let comment = commenterComment[1];
     let mentioned = extractUserNames(comment); // the tagged user(s) for a commenter
+
     // remove duplicates
     mentioned = [...new Set(mentioned)];
     if (mentioned.length > 0) {
@@ -87,6 +86,8 @@ router.put("/", async (req, res) => {
   // get the current states of (commenter, tagged) tuples from the db
   const oldCommentMapping = await knex("tagged").select("*");
 
+  // merge the two mappings
+  // TODO this could probably be more efficient than it is
   const newRows = [];
   for (ocm of oldCommentMapping) {
     if (
@@ -115,45 +116,56 @@ router.put("/", async (req, res) => {
     }
   }
 
+  // reset the tagged table, then insert the new rows
   await knex("tagged").del();
-  res.send(await knex("tagged").insert(newRows));
+  await knex("tagged").insert(newRows);
+
+  let message = { status: 200, message: `${newRows.length} tags in the table` };
+  console.log(
+    "RESPOND: PUT leaderboard-api/api/comments",
+    JSON.stringify(message)
+  );
+  res.send(message);
 });
 
 // check all rows with validated = false in the 'tagged' database
 // remove those rows that do not pass validation
 router.patch("/", async (req, res) => {
-  console.log("got a PATCH /api/comments request with body:", req.body);
-  const USER_CREDS = {
-    acc1: {
+  console.log("RECEIVED: PATCH leaderboard-api/api/comments");
+
+  var device = new Client.Device(req.body.user);
+  const session = await getSesh(
+    {
       username: req.body.user,
-      password: req.body.password,
-      target: req.body.target
-    }
-  };
+      password: req.body.password
+    },
+    device
+  );
 
-  var device = new Client.Device(USER_CREDS.acc1.username);
-  const session = await getSesh(USER_CREDS.acc1, device);
-
+  // get all the tags that need to be validated
   const tagged = await knex("tagged")
     .select("*")
     .where("validated", false);
-  console.log(tagged);
 
+  if (tagged.length < 1) {
+    let message = { status: 200, message: "no tags to validate" };
+    console.log(
+      "RESPOND: PATCH leaderboard-api/api/comments:",
+      JSON.stringify(message)
+    );
+    res.send(message);
+    return
+  }
+  // for each of the unvalidated tags, attempt to validate it
   let mapping = {};
   let updated = [];
-
   for (tag of tagged) {
-    // const followers = await getFollowersOfUser(session, accountID);
     const userID = await getUserIdFromUsername(session, tag.username);
     const taggedID = await getUserIdFromUsername(session, tag.tagged);
-    console.log(tag.username);
     let followers = [];
-    let valid = false;
     if (!mapping[userID]) {
-      console.log("havent seen");
       followers = await getFollowers(session, userID);
     } else {
-      console.log("seen");
       followers = mapping[userID];
     }
     Object.assign(mapping, { [userID]: followers });
@@ -164,16 +176,28 @@ router.patch("/", async (req, res) => {
         validated: true
       });
     } else {
-      console.log("invalid tag");
+      console.log(
+        "tag tuple:",
+        JSON.stringify(tag),
+        "is either invalid or could not be validated."
+      );
     }
   }
 
+  // delete all rows that were previously unvalidated, insert all rows that
+  // were just validated
   await knex("tagged")
     .where("validated", false)
     .del();
-  console.log(await knex("tagged").insert(updated));
+  await knex("tagged").insert(updated);
 
-  res.send(updated);
+  // TODO need to send error codes if they occur
+  let message = { code: 200, message: `${updated.length} tags are valid` };
+  console.log(
+    "RESPOND: PATCH leaderboard-api/api/comments",
+    JSON.stringify(message)
+  );
+  res.send(message);
 });
 
 module.exports = router;

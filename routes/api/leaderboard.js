@@ -15,21 +15,24 @@ const {
 // todo: should consider creating a endpoint that updates a 'likes' table and do a select to that table here
 // todo: add try/catch blocks
 
-// GET api/leaderboard returns the current leaderboard
+// returns the current leaderboard
 router.get("/", async (req, res) => {
-  console.log("RECEIVED: GET /API/LEADERBOARD");
-  let r = await knex
+  console.log("RECEIVED: GET leaderboard-api/api/leaderboard");
+
+  let leaderboardRows = await knex
     .select("username", "points", "likes", "users_tagged", "support_a_creator")
     .from("leaderboard")
     .orderBy("points", "desc")
     .limit(100);
-  res.send(r);
+  console.log("RESPOND: GET leaderboard-api/api/leaderboard");
+  res.send(leaderboardRows);
 });
 
 // PATCH api/leaderboard
 router.patch("/", async (req, res) => {
-  // SETUP
-  console.log("RECEIVED: PATCH /API/LEADERBOARD");
+  console.log("RECEIVED: PATCH leaderboard-api/api/leaderboard");
+
+  // create instagram-private-api session
   var device = new Client.Device(req.body.user);
   const session = await getSesh(
     {
@@ -115,7 +118,17 @@ router.patch("/", async (req, res) => {
     "UPDATE leaderboard SET points = 100*likes + 200*users_tagged + 500*is_supporter"
   );
 
-  res.sendStatus(200);
+  let message = {
+    status: 200,
+    message: `total likers: ${rowsLikes.length}, total taggers: ${
+      rowsComments.rows.length
+    }`
+  };
+  console.log(
+    "RESPOND: PATCH leaderboard-api/api/leaderboard",
+    JSON.stringify(message)
+  );
+  res.send(message);
 });
 
 module.exports = router;
