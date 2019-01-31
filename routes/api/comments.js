@@ -14,6 +14,45 @@ const {
   getFollowers
 } = require("../../helpers/helpers.js");
 
+router.put("/latest", async (req, res) => {
+  console.log("RECEIVED: PUT leaderboard-api/api/comments/latest");
+  const device = new Client.Device(req.body.user);
+  const session = await getSesh(
+    {
+      username: req.body.user,
+      password: req.body.password
+    },
+    device
+  );
+  const accountName = req.body.target;
+  const accountID = await getUserIdFromUsername(session, accountName);
+
+  // get all the medias of the account
+  const mediaIds = (await getMedia(session, accountID))
+    .filter(m => m._params.takenAt > parseInt(req.body.startDate))
+    .map(m => m.id);
+
+  // get the first 10 comments of each media
+  firstTenMapping = {};
+  for (mid of mediaIds) {
+    // add comments of this media to a accumulator list of comments
+    let comments = (await getComments(session, mid)).slice(0, 10);
+    let users = comments.map(c => c._params.user.username);
+    for (user of users) {
+      firstTenMapping[user] = firstTenMapping[user] + 1 || 1;
+    }
+  }
+
+  let rows = [];
+  for (user of Object.entries(firstTenMapping)) {
+    rows.push({ username: user[0], count: user[1] });
+  }
+
+  await knex("early_commenters").del();
+  await knex("early_commenters").insert(rows);
+  res.send({ code: 200, message: "inserted some first commenters" });
+});
+
 // gets all instances where a user has tagged another user from the comment
 // section of each post after the specified start date
 router.put("/", async (req, res) => {
@@ -154,7 +193,7 @@ router.patch("/", async (req, res) => {
       JSON.stringify(message)
     );
     res.send(message);
-    return
+    return;
   }
   // for each of the unvalidated tags, attempt to validate it
   let mapping = {};

@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
   console.log("RECEIVED: GET leaderboard-api/api/leaderboard");
 
   let leaderboardRows = await knex
-    .select("username", "points", "likes", "users_tagged", "is_supporter")
+    .select()
     .from("leaderboard")
     .orderBy("points", "desc")
     .limit(100);
@@ -103,7 +103,7 @@ router.patch("/", async (req, res) => {
     }' where leaderboard.username = '${row.username}'`);
   }
 
-  // insert any support a creator records into the leaderboard
+  // update any support a creator records into the leaderboard
   await knex.raw(
     `
     update leaderboard
@@ -113,9 +113,19 @@ router.patch("/", async (req, res) => {
     `
   );
 
+  // update early commenter records into the leaderboard
+  await knex.raw(
+    `
+    update leaderboard
+    set early_comments = early_commenters.count
+    from early_commenters
+    where early_commenters.username = leaderboard.username
+    `
+  );
+
   // calculate points from the other columns in the leaderboard
   await knex.raw(
-    "UPDATE leaderboard SET points = 100*likes + 200*users_tagged + 500*is_supporter"
+    "UPDATE leaderboard SET points = 100*likes + 200*users_tagged + 500*is_supporter + 300*early_comments"
   );
 
   let message = {
