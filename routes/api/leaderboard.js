@@ -125,7 +125,17 @@ router.patch("/", async (req, res) => {
 
   // calculate points from the other columns in the leaderboard
   await knex.raw(
-    "UPDATE leaderboard SET points = 100*likes + 200*users_tagged + 500*is_supporter + 300*early_comments"
+    `UPDATE leaderboard
+     SET points = 
+     100*likes + 200*users_tagged + 500*is_supporter + 300*early_comments`
+  );
+
+  // calculate the chance of winning for the top 10 users
+  await knex.raw(
+    `UPDATE leaderboard
+     SET chance = round(100*points::float/(select sum(points)
+     from (select * from leaderboard order by points desc limit 10) as topten))
+     `
   );
 
   let message = {
