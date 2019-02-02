@@ -11,7 +11,7 @@ const apiLimiter = rateLimit({
 });
 
 // rate limiter
-router.enable("trust proxy");
+// router.enable("trust proxy");
 router.use("/search", apiLimiter);
 
 router.use("/leaderboard", leaderboardRoute);
