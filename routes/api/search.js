@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
 
   if (!searchedUser[0]) {
     console.log("RESPOND: GET leaderboard-api/api/search user not found");
-    return res.send({ status: 400, message: "user has 0 points" });
+    return res.sendStatus(404);
   }
   let chanceToWin = 0;
   let totalPointsTopTen = topTen
