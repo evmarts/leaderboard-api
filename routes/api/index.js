@@ -4,6 +4,8 @@ const rateLimit = require("express-rate-limit");
 var leaderboardRoute = require("./leaderboard");
 var commentRoute = require("./comments");
 var searchRoute = require("./search");
+var cors = require("cors");
+
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -11,8 +13,9 @@ const apiLimiter = rateLimit({
 });
 
 // rate limiter
-// router.enable("trust proxy");
+router.enable("trust proxy");
 router.use("/search", apiLimiter);
+router.use(cors());
 
 router.use("/leaderboard", leaderboardRoute);
 router.use("/comments", commentRoute);
