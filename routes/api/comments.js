@@ -70,7 +70,7 @@ router.put("/", async (req, res) => {
   const accountName = req.body.target;
   const accountID = await getUserIdFromUsername(session, accountName);
 
-  // get all the medias of the account
+  // get all the medias of the account after the specified start date
   const mediaIds = (await getMedia(session, accountID))
     .filter(m => m._params.takenAt > parseInt(req.body.startDate))
     .map(m => m.id);

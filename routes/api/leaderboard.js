@@ -127,7 +127,7 @@ router.patch("/", async (req, res) => {
   await knex.raw(
     `UPDATE leaderboard
      SET points = 
-     100*likes + 200*users_tagged + 500*is_supporter + 300*early_comments`
+     100*likes + 300*users_tagged + 600*is_supporter + 200*early_comments`
   );
 
   let message = {
