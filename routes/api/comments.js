@@ -43,11 +43,12 @@ router.put("/latest", async (req, res) => {
     let users = [];
     let u = 0;
     for (comment of comments) {
-      if (!users.includes(c._params.user.username) && u <= 10) {
-        users.push(c._params.username);
+      if (!users.includes(comment._params.user.username) && u <= 10) {
+        users.push(comment._params.user.username);
         u = u + 1;
       }
     }
+    console.log(users);
     // count the number of first comments each user has
     for (user of users) {
       firstTenMapping[user] = firstTenMapping[user] + 1 || 1;
