@@ -32,12 +32,23 @@ router.put("/latest", async (req, res) => {
     .filter(m => m._params.takenAt > parseInt(req.body.startDate))
     .map(m => m.id);
 
-  // get the first 10 comments of each media
+  // get the comments of each media
   firstTenMapping = {};
   for (mid of mediaIds) {
     // add comments of this media to a accumulator list of comments
-    let comments = (await getComments(session, mid)).slice(0, 10);
-    let users = comments.map(c => c._params.user.username);
+    let comments = await getComments(session, mid);
+
+    // loop through all comments of a media, incrementing the counter on each
+    // unique user, do not keep the comments when u > 10
+    let users = [];
+    let u = 0;
+    for (comment of comments) {
+      if (!users.includes(c._params.user.username) && u <= 10) {
+        users.push(c._params.username);
+        u = u + 1;
+      }
+    }
+    // count the number of first comments each user has
     for (user of users) {
       firstTenMapping[user] = firstTenMapping[user] + 1 || 1;
     }
