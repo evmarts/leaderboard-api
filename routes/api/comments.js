@@ -55,6 +55,7 @@ router.put("/latest", async (req, res) => {
     }
   }
 
+  // create rows to insert
   let rows = [];
   for (user of Object.entries(firstTenMapping)) {
     rows.push({ username: user[0], count: user[1] });
